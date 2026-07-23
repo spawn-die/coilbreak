@@ -1,0 +1,20 @@
+{
+  "name": "coilbreak",
+  "version": "1.0.0",
+  "description": "COILBREAK — weave lethal energy coils in a neon arena, evolve between waves, shatter the Core Warden.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve -l 4173 .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify:launch": "node scripts/verify-launch.mjs"
+  },
+  "keywords": ["game", "roguelite", "arena", "coilbreak"],
+  "author": "spawn-die",
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "playwright": "^1.61.1",
+    "vitest": "^3.2.4"
+  }
+}

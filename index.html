@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>COILBREAK</title>
+    <meta
+      name="description"
+      content="Weave lethal energy coils in a neon arena, evolve between waves, shatter the Core Warden."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top">
+        <div class="brand">
+          <span class="logo">◈</span>
+          <div>
+            <h1>COILBREAK</h1>
+            <p class="tag">Weave the rift · Shatter the core</p>
+          </div>
+        </div>
+        <div class="meta">
+          <span>vertical slice</span>
+          <span class="dot">·</span>
+          <span>arena roguelite</span>
+        </div>
+      </header>
+
+      <main>
+        <div id="stage">
+          <canvas id="game" width="960" height="640" aria-label="COILBREAK game canvas"></canvas>
+          <div id="file-warning" hidden>
+            ES modules need a local server. Run <code>npm start</code> then open
+            <code>http://localhost:4173</code>
+          </div>
+        </div>
+        <aside class="panel">
+          <h2>How to play</h2>
+          <ul>
+            <li><kbd>WASD</kbd> move</li>
+            <li><kbd>Mouse</kbd> aim · <kbd>Click</kbd> fire</li>
+            <li><kbd>F</kbd> / <kbd>RMB</kbd> plant coil nodes</li>
+            <li><kbd>Space</kbd> phase dash</li>
+            <li><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> pick upgrades</li>
+          </ul>
+          <h2>Fantasy</h2>
+          <p>
+            You are a Riftwalker trapped in a collapsing neon pocket. Link energy coils into
+            cutting beams, harvest essence, evolve your loadout, and break the Core Warden
+            before the void takes you.
+          </p>
+          <h2>Systems</h2>
+          <p>
+            <strong>Combat</strong> — bolts, dash i-frames, contact damage.<br />
+            <strong>Coils</strong> — place nodes; beams shred anything between them (costs energy).<br />
+            <strong>Progression</strong> — clear waves → choose upgrades → face the Warden on wave 5.
+          </p>
+        </aside>
+      </main>
+
+      <footer>
+        <span>COILBREAK · built to be actually fun</span>
+        <span>Run tests: <code>npm test</code></span>
+      </footer>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
