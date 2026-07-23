@@ -45,4 +45,15 @@ describe('Coilbreak Forge pipeline presentation', () => {
     expect(src).toMatch(/getPlayerProxy/);
     expect(src).toMatch(/heroWalk|heroIdle/);
   });
+
+  it('pipeline sprites use stranger-readable scale mults (not tiny blobs)', async () => {
+    const { PLAYER_SPRITE_RADIUS_MULT, ENEMY_SPRITE_RADIUS_MULT } = await import(
+      '../src/render/renderer.js'
+    );
+    expect(PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(5.5);
+    expect(ENEMY_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(4);
+    // sim radius ~14 → on-screen height scale > 70px-class
+    expect(14 * PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThan(70);
+  });
 });
+

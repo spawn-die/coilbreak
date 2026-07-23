@@ -40,5 +40,40 @@ export function createAudio() {
     osc.stop(t0 + dur + 0.02);
   }
 
-  return { beep, ensure };
+  /** Named cues for combat / UI — used by main loop. */
+  function play(cue) {
+    switch (cue) {
+      case 'start':
+        beep(440, 0.06, 'square', 0.045);
+        break;
+      case 'upgrade':
+        beep(660, 0.08, 'triangle', 0.05);
+        break;
+      case 'win':
+        beep(880, 0.2, 'sawtooth', 0.06);
+        break;
+      case 'lose':
+        beep(110, 0.25, 'sawtooth', 0.07);
+        break;
+      case 'kill':
+        beep(320 + Math.random() * 80, 0.05, 'square', 0.04);
+        break;
+      case 'hit':
+        beep(180, 0.07, 'sawtooth', 0.05);
+        break;
+      case 'fire':
+        beep(520, 0.03, 'square', 0.03);
+        break;
+      case 'coil':
+        beep(740, 0.05, 'triangle', 0.035);
+        break;
+      case 'ui':
+        beep(600, 0.04, 'sine', 0.03);
+        break;
+      default:
+        beep(400, 0.04, 'square', 0.03);
+    }
+  }
+
+  return { beep, ensure, play };
 }

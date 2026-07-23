@@ -22,6 +22,8 @@ export function boot(canvas, opts = {}) {
   let running = true;
   let prevPhase = state.phase;
   let prevKills = 0;
+  let prevHp = state.player.hp;
+  let prevCoils = state.coils.length;
 
   function frame(now) {
     if (!running) return;
@@ -29,17 +31,24 @@ export function boot(canvas, opts = {}) {
     last = now;
 
     controls.sync(state);
+    const shotsBefore = state.projectiles?.length ?? 0;
     step(state, dt);
+    const shotsAfter = state.projectiles?.length ?? 0;
 
     if (audio) {
-      if (state.phase === 'playing' && prevPhase === 'title') audio.beep(440, 0.06, 'square', 0.04);
-      if (state.phase === 'upgrade' && prevPhase === 'playing') audio.beep(660, 0.08, 'triangle', 0.05);
-      if (state.phase === 'won' && prevPhase !== 'won') audio.beep(880, 0.2, 'sawtooth', 0.06);
-      if (state.phase === 'lost' && prevPhase !== 'lost') audio.beep(110, 0.25, 'sawtooth', 0.07);
-      if (state.killCount > prevKills) audio.beep(320 + Math.random() * 80, 0.04, 'square', 0.03);
+      if (state.phase === 'playing' && prevPhase === 'title') audio.play('start');
+      if (state.phase === 'upgrade' && prevPhase === 'playing') audio.play('upgrade');
+      if (state.phase === 'won' && prevPhase !== 'won') audio.play('win');
+      if (state.phase === 'lost' && prevPhase !== 'lost') audio.play('lose');
+      if (state.killCount > prevKills) audio.play('kill');
+      if (state.player.hp < prevHp) audio.play('hit');
+      if (state.coils.length > prevCoils) audio.play('coil');
+      if (shotsAfter > shotsBefore && state.phase === 'playing') audio.play('fire');
     }
     prevPhase = state.phase;
     prevKills = state.killCount;
+    prevHp = state.player.hp;
+    prevCoils = state.coils.length;
 
     renderer.draw(state, dt);
     requestAnimationFrame(frame);
@@ -67,6 +76,7 @@ export function boot(canvas, opts = {}) {
     whenSpritesReady() {
       return renderer.whenSpritesReady();
     },
+    audio,
   };
 }
 

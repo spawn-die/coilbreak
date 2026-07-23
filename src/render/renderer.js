@@ -1,6 +1,10 @@
 import { ARENA, COLORS } from '../game/constants.js';
 import { loadSpritePack } from './sprites.js';
 
+/** Render-only scale vs sim radius — stranger-readable pipeline characters. */
+export const PLAYER_SPRITE_RADIUS_MULT = 6.2;
+export const ENEMY_SPRITE_RADIUS_MULT = 4.8;
+
 /**
  * Canvas renderer — visual only; never mutates game rules.
  * Player/enemy can use Forge Atelier texture sprites when loaded.
@@ -260,7 +264,9 @@ export class Renderer {
           ? enemyFrames[Math.floor(this.animPhase + e.x * 0.01) % enemyFrames.length]
           : null;
       if (eimg && typeof ctx.drawImage === 'function') {
-        const scale = (e.radius * 2.8) / Math.max(eimg.naturalWidth || eimg.width || 64, 1);
+        const scale =
+          (e.radius * ENEMY_SPRITE_RADIUS_MULT) /
+          Math.max(eimg.naturalWidth || eimg.width || 64, 1);
         const w = (eimg.naturalWidth || eimg.width || 64) * scale;
         const h = (eimg.naturalHeight || eimg.height || 64) * scale;
         if (flash) ctx.globalAlpha = 0.85;
@@ -360,7 +366,10 @@ export class Renderer {
 
     if (img) {
       // texture path — Forge Atelier identity (not geometry ship)
-      const scale = (p.radius * 3.4) / Math.max(img.naturalWidth || img.width || 64, 1);
+      // Larger mult so stranger can read cape/sword at arena scale (hitbox unchanged)
+      const scale =
+        (p.radius * PLAYER_SPRITE_RADIUS_MULT) /
+        Math.max(img.naturalWidth || img.width || 64, 1);
       const w = (img.naturalWidth || img.width || 64) * scale;
       const h = (img.naturalHeight || img.height || 64) * scale;
       // face aim roughly: flip if aiming left

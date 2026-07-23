@@ -18,6 +18,8 @@ node scripts/verify-launch.mjs   # needs playwright + system chrome channel
 - Assets under `assets/canon/`, `assets/actors/`
 - Sync: `npm run sync:forge` (requires `cd ../forge && npm run arena:build` first)
 - Renderer: `src/render/sprites.js` + `drawImage` path in `renderer.js`
+- **Readable scale:** `PLAYER_SPRITE_RADIUS_MULT=6.2`, `ENEMY_SPRITE_RADIUS_MULT=4.8` (render-only; hitboxes unchanged)
+- **Audio:** `createAudio().play(cue)` — start/kill/hit/fire/coil from main loop
 
 ## Gotchas
 
