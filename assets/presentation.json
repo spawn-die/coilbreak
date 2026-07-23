@@ -2,8 +2,10 @@
   "titleId": "coilbreak",
   "stage": "L2",
   "source": "forge-atelier-pipeline",
+  "aesthetic": "neon-space-ship",
   "hero": {
     "proxy": "texture",
+    "kind": "ship",
     "canonBase": "assets/canon/hero_base.png",
     "idle": ["assets/actors/hero_idle_01.png", "assets/actors/hero_idle_02.png"],
     "walk": [
@@ -15,6 +17,7 @@
   },
   "enemy": {
     "proxy": "texture",
+    "kind": "drone",
     "canonBase": "assets/canon/enemy_base.png",
     "idle": ["assets/actors/enemy_idle_01.png", "assets/actors/enemy_idle_02.png"]
   }

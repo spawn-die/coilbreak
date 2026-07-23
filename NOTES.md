@@ -11,7 +11,7 @@ node scripts/verify-launch.mjs   # needs playwright + system chrome channel
 
 ## Role
 
-**Studio visual showcase** — best-looking playable title. Now loads **Forge/Atelier pipeline textures** for player + trash enemies (`assets/presentation.json`, `proxy: texture`). Geometry ship remains fallback if sprites fail.
+**Studio visual showcase** — neon **space** arena, not fantasy. Pipeline textures must be **ships/drones** (`aesthetic: neon-space-ship`). Never sync arena-2d humanoid/knight art into Coilbreak (that was a bad art call). Geometry ship remains fallback if sprites fail.
 
 ## Pipeline
 

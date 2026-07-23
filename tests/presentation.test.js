@@ -46,14 +46,21 @@ describe('Coilbreak Forge pipeline presentation', () => {
     expect(src).toMatch(/heroWalk|heroIdle/);
   });
 
-  it('pipeline sprites use stranger-readable scale mults (not tiny blobs)', async () => {
+  it('pipeline sprites use readable ship scale (not humanoid-giant, not tiny)', async () => {
     const { PLAYER_SPRITE_RADIUS_MULT, ENEMY_SPRITE_RADIUS_MULT } = await import(
       '../src/render/renderer.js'
     );
-    expect(PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(5.5);
-    expect(ENEMY_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(4);
-    // sim radius ~14 → on-screen height scale > 70px-class
-    expect(14 * PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThan(70);
+    expect(PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(4);
+    expect(PLAYER_SPRITE_RADIUS_MULT).toBeLessThan(7);
+    expect(ENEMY_SPRITE_RADIUS_MULT).toBeGreaterThanOrEqual(3);
+    expect(14 * PLAYER_SPRITE_RADIUS_MULT).toBeGreaterThan(50);
+  });
+
+  it('presentation aesthetic is neon space ship, not fantasy knight', () => {
+    const pres = JSON.parse(readFileSync(join(ROOT, 'assets/presentation.json'), 'utf8'));
+    expect(pres.aesthetic).toMatch(/ship|space|neon/i);
+    expect(pres.hero.kind).toBe('ship');
+    expect(pres.enemy.kind).toBe('drone');
   });
 });
 

@@ -1,9 +1,12 @@
 import { ARENA, COLORS } from '../game/constants.js';
 import { loadSpritePack } from './sprites.js';
 
-/** Render-only scale vs sim radius — stranger-readable pipeline characters. */
-export const PLAYER_SPRITE_RADIUS_MULT = 6.2;
-export const ENEMY_SPRITE_RADIUS_MULT = 4.8;
+/**
+ * Render-only scale vs sim radius.
+ * Ships read better slightly larger than the old tiny triangle, without covering the arena.
+ */
+export const PLAYER_SPRITE_RADIUS_MULT = 4.6;
+export const ENEMY_SPRITE_RADIUS_MULT = 3.8;
 
 /**
  * Canvas renderer — visual only; never mutates game rules.
@@ -365,19 +368,15 @@ export class Renderer {
         : null;
 
     if (img) {
-      // texture path — Forge Atelier identity (not geometry ship)
-      // Larger mult so stranger can read cape/sword at arena scale (hitbox unchanged)
+      // Texture path: top-down neon ship (not a humanoid). Rotate with aim like the geometry ship.
       const scale =
         (p.radius * PLAYER_SPRITE_RADIUS_MULT) /
         Math.max(img.naturalWidth || img.width || 64, 1);
       const w = (img.naturalWidth || img.width || 64) * scale;
       const h = (img.naturalHeight || img.height || 64) * scale;
-      // face aim roughly: flip if aiming left
-      const aimLeft = state.input && Math.cos(p.angle) < 0;
-      ctx.save();
-      if (aimLeft) ctx.scale(-1, 1);
-      ctx.drawImage(img, -w / 2, -h * 0.62, w, h);
-      ctx.restore();
+      ctx.rotate(p.angle);
+      // art faces +X; match geometry ship nose
+      ctx.drawImage(img, -w * 0.45, -h / 2, w, h);
     } else {
       // geometry fallback (ship)
       ctx.rotate(p.angle);
