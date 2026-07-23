@@ -118,6 +118,9 @@ function makeMockCanvas(width = ARENA.width, height = ARENA.height) {
       // return full buffer view
       return { data: pixels, width: w, height: h };
     },
+    drawImage() {
+      this._ops.push('drawImage');
+    },
   };
 
   const canvas = {

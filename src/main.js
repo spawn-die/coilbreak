@@ -60,6 +60,13 @@ export function boot(canvas, opts = {}) {
     getArena() {
       return { width: ARENA.width, height: ARENA.height };
     },
+    /** Presentation identity once Atelier sprites load. */
+    getPlayerProxy() {
+      return renderer.getPlayerProxy();
+    },
+    whenSpritesReady() {
+      return renderer.whenSpritesReady();
+    },
   };
 }
 

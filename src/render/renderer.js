@@ -1,7 +1,9 @@
 import { ARENA, COLORS } from '../game/constants.js';
+import { loadSpritePack } from './sprites.js';
 
 /**
  * Canvas renderer — visual only; never mutates game rules.
+ * Player/enemy can use Forge Atelier texture sprites when loaded.
  */
 export class Renderer {
   /**
@@ -15,12 +17,31 @@ export class Renderer {
     canvas.width = this.w;
     canvas.height = this.h;
     this.t = 0;
+    this.animPhase = 0;
+    /** @type {import('./sprites.js').SpritePack | null} */
+    this.sprites = null;
     this.stars = Array.from({ length: 80 }, (_, i) => ({
       x: (i * 97) % this.w,
       y: (i * 53) % this.h,
       z: 0.3 + (i % 5) * 0.15,
       p: (i * 17) % 100,
     }));
+    // Fire-and-forget sprite load (geometry until ready)
+    this._spritePromise = loadSpritePack().then((pack) => {
+      this.sprites = pack;
+      return pack;
+    });
+  }
+
+  /** @returns {Promise<import('./sprites.js').SpritePack>} */
+  whenSpritesReady() {
+    return this._spritePromise;
+  }
+
+  /** @returns {string} */
+  getPlayerProxy() {
+    if (this.sprites?.ready && this.sprites.proxy === 'texture') return 'texture';
+    return 'geometry';
   }
 
   /**
@@ -29,6 +50,7 @@ export class Renderer {
    */
   draw(state, dt = 0) {
     this.t += dt;
+    this.animPhase += dt * 8;
     const ctx = this.ctx;
     const shakeX = state.shake ? (Math.random() - 0.5) * state.shake : 0;
     const shakeY = state.shake ? (Math.random() - 0.5) * state.shake : 0;
@@ -211,6 +233,7 @@ export class Renderer {
    * @param {any} state
    */
   drawEnemies(ctx, state) {
+    const enemyFrames = this.sprites?.ready ? this.sprites.enemyIdle : [];
     for (const e of state.enemies) {
       const flash = e.hitFlash > 0;
       ctx.save();
@@ -231,31 +254,43 @@ export class Renderer {
         ctx.stroke();
         ctx.setTransform(1, 0, 0, 1, e.x + (state.shake ? 0 : 0), e.y);
       }
-      ctx.beginPath();
-      const r = e.radius;
-      if (e.type === 'siphon') {
-        // diamond silhouette — reads as a coil hunter
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r, 0);
-        ctx.lineTo(0, r);
-        ctx.lineTo(-r, 0);
-        ctx.closePath();
+
+      const eimg =
+        !e.isBoss && enemyFrames.length
+          ? enemyFrames[Math.floor(this.animPhase + e.x * 0.01) % enemyFrames.length]
+          : null;
+      if (eimg && typeof ctx.drawImage === 'function') {
+        const scale = (e.radius * 2.8) / Math.max(eimg.naturalWidth || eimg.width || 64, 1);
+        const w = (eimg.naturalWidth || eimg.width || 64) * scale;
+        const h = (eimg.naturalHeight || eimg.height || 64) * scale;
+        if (flash) ctx.globalAlpha = 0.85;
+        ctx.drawImage(eimg, -w / 2, -h * 0.55, w, h);
+        ctx.globalAlpha = 1;
       } else {
-        // angular body
-        ctx.moveTo(0, -r);
-        ctx.lineTo(r * 0.85, r * 0.7);
-        ctx.lineTo(0, r * 0.35);
-        ctx.lineTo(-r * 0.85, r * 0.7);
-        ctx.closePath();
+        ctx.beginPath();
+        const r = e.radius;
+        if (e.type === 'siphon') {
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r, 0);
+          ctx.lineTo(0, r);
+          ctx.lineTo(-r, 0);
+          ctx.closePath();
+        } else {
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.85, r * 0.7);
+          ctx.lineTo(0, r * 0.35);
+          ctx.lineTo(-r * 0.85, r * 0.7);
+          ctx.closePath();
+        }
+        ctx.fillStyle = flash ? '#ffffff' : e.color;
+        ctx.shadowColor = e.color;
+        ctx.shadowBlur = e.isBoss ? 24 : 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = e.type === 'siphon' ? COLORS.coilHot : 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
       }
-      ctx.fillStyle = flash ? '#ffffff' : e.color;
-      ctx.shadowColor = e.color;
-      ctx.shadowBlur = e.isBoss ? 24 : 12;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = e.type === 'siphon' ? COLORS.coilHot : 'rgba(0,0,0,0.35)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
 
       // hp bar
       if (e.hp < e.maxHp || e.isBoss) {
@@ -302,55 +337,73 @@ export class Renderer {
     if (!p.alive && state.phase === 'lost') return;
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.angle);
-
-    // engine trail
-    if (state.phase === 'playing' && (Math.abs(p.vx) + Math.abs(p.vy) > 20 || p.dashTimer > 0)) {
-      const flicker = 0.55 + 0.45 * Math.sin(this.t * 40);
-      ctx.beginPath();
-      ctx.moveTo(-p.radius * 0.5, -5);
-      ctx.lineTo(-p.radius - 10 - flicker * 8, 0);
-      ctx.lineTo(-p.radius * 0.5, 5);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(255, 106, 213, ${0.55 * flicker})`;
-      ctx.shadowColor = COLORS.coilHot;
-      ctx.shadowBlur = 12;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
 
     // dash ghost
     if (p.dashTimer > 0 || p.invuln > 0) {
       ctx.globalAlpha = 0.5 + 0.5 * Math.sin(this.t * 40);
     }
 
-    // glow
+    // soft ground glow
     ctx.beginPath();
     ctx.arc(0, 0, p.radius + 10, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(61, 255, 154, 0.18)';
     ctx.fill();
 
-    // ship body
-    ctx.beginPath();
-    ctx.moveTo(p.radius + 4, 0);
-    ctx.lineTo(-p.radius * 0.8, p.radius * 0.75);
-    ctx.lineTo(-p.radius * 0.4, 0);
-    ctx.lineTo(-p.radius * 0.8, -p.radius * 0.75);
-    ctx.closePath();
-    ctx.fillStyle = COLORS.player;
-    ctx.shadowColor = COLORS.playerGlow;
-    ctx.shadowBlur = 18;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#e8fff2';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const moving = Math.hypot(p.vx, p.vy) > 25 || p.dashTimer > 0;
+    const idle = this.sprites?.heroIdle ?? [];
+    const walk = this.sprites?.heroWalk ?? [];
+    const frames = moving && walk.length ? walk : idle;
+    const img =
+      frames.length && typeof ctx.drawImage === 'function'
+        ? frames[Math.floor(this.animPhase) % frames.length]
+        : null;
 
-    // cockpit
-    ctx.beginPath();
-    ctx.arc(2, 0, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#d0fff0';
-    ctx.fill();
+    if (img) {
+      // texture path — Forge Atelier identity (not geometry ship)
+      const scale = (p.radius * 3.4) / Math.max(img.naturalWidth || img.width || 64, 1);
+      const w = (img.naturalWidth || img.width || 64) * scale;
+      const h = (img.naturalHeight || img.height || 64) * scale;
+      // face aim roughly: flip if aiming left
+      const aimLeft = state.input && Math.cos(p.angle) < 0;
+      ctx.save();
+      if (aimLeft) ctx.scale(-1, 1);
+      ctx.drawImage(img, -w / 2, -h * 0.62, w, h);
+      ctx.restore();
+    } else {
+      // geometry fallback (ship)
+      ctx.rotate(p.angle);
+      if (state.phase === 'playing' && (Math.abs(p.vx) + Math.abs(p.vy) > 20 || p.dashTimer > 0)) {
+        const flicker = 0.55 + 0.45 * Math.sin(this.t * 40);
+        ctx.beginPath();
+        ctx.moveTo(-p.radius * 0.5, -5);
+        ctx.lineTo(-p.radius - 10 - flicker * 8, 0);
+        ctx.lineTo(-p.radius * 0.5, 5);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(255, 106, 213, ${0.55 * flicker})`;
+        ctx.shadowColor = COLORS.coilHot;
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.beginPath();
+      ctx.moveTo(p.radius + 4, 0);
+      ctx.lineTo(-p.radius * 0.8, p.radius * 0.75);
+      ctx.lineTo(-p.radius * 0.4, 0);
+      ctx.lineTo(-p.radius * 0.8, -p.radius * 0.75);
+      ctx.closePath();
+      ctx.fillStyle = COLORS.player;
+      ctx.shadowColor = COLORS.playerGlow;
+      ctx.shadowBlur = 18;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#e8fff2';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(2, 0, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#d0fff0';
+      ctx.fill();
+    }
 
     ctx.restore();
 

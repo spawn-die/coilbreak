@@ -7,7 +7,8 @@
     "start": "npx --yes serve -l 4783 .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:launch": "node scripts/verify-launch.mjs"
+    "verify:launch": "node scripts/verify-launch.mjs",
+    "sync:forge": "node scripts/sync-forge-assets.mjs"
   },
   "keywords": ["game", "roguelite", "arena", "coilbreak"],
   "author": "spawn-die",

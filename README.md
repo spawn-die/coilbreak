@@ -10,10 +10,13 @@ A focused arena roguelite vertical slice — real combat, coil-beam tactics, and
 
 ```bash
 npm install
+npm run sync:forge   # optional refresh of Forge Atelier sprites
 npm start
 ```
 
 Open **http://localhost:4783**
+
+Player and enemies use **Forge pipeline sprites** when `assets/` is present (texture identity). Geometry ship is fallback only.
 
 > ES modules will not load from `file://`. Use `npm start` (or any static server from the repo root).
 

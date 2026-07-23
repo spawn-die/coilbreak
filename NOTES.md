@@ -3,14 +3,21 @@
 ## Run
 
 ```bash
-npm i && npm start   # :4783 (not 4173 — keycrafted collision)
+npm i && npm start   # :4783
 npm test
+npm run sync:forge   # pull Atelier sprites from ../forge arena build
 node scripts/verify-launch.mjs   # needs playwright + system chrome channel
 ```
 
 ## Role
 
-Arcade side dish. Real fun loop; **not** the studio wow flagship (that’s Nightwell).
+**Studio visual showcase** — best-looking playable title. Now loads **Forge/Atelier pipeline textures** for player + trash enemies (`assets/presentation.json`, `proxy: texture`). Geometry ship remains fallback if sprites fail.
+
+## Pipeline
+
+- Assets under `assets/canon/`, `assets/actors/`
+- Sync: `npm run sync:forge` (requires `cd ../forge && npm run arena:build` first)
+- Renderer: `src/render/sprites.js` + `drawImage` path in `renderer.js`
 
 ## Gotchas
 
