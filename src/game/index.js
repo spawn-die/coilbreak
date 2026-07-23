@@ -22,6 +22,9 @@ export {
   damagePlayer,
   applyCoilDamage,
   updateProjectiles,
+  findNearestCoil,
+  trySiphonCoil,
+  SIPHON_SABOTAGE_COOLDOWN,
 } from './combat.js';
 export {
   buildWavePlan,

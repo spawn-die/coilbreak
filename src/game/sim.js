@@ -5,9 +5,11 @@ import {
   clampToArena,
   damagePlayer,
   dist,
+  findNearestCoil,
   firePlayerBolts,
   placeCoil,
   tryDash,
+  trySiphonCoil,
   updateProjectiles,
 } from './combat.js';
 import { isWaveClear, startWave, updateSpawns } from './waves.js';
@@ -188,10 +190,22 @@ function updateEnemies(state, dt) {
   const p = state.player;
   for (const e of state.enemies) {
     e.hitFlash = Math.max(0, e.hitFlash - dt);
+    if (e.siphonCd > 0) e.siphonCd = Math.max(0, e.siphonCd - dt);
     if (!p.alive) continue;
 
-    const dx = p.x - e.x;
-    const dy = p.y - e.y;
+    // Siphon: hunt nearest coil when any exist; otherwise chase player.
+    let targetX = p.x;
+    let targetY = p.y;
+    if (e.type === 'siphon' && state.coils.length > 0) {
+      const coil = findNearestCoil(state.coils, e);
+      if (coil) {
+        targetX = coil.x;
+        targetY = coil.y;
+      }
+    }
+
+    const dx = targetX - e.x;
+    const dy = targetY - e.y;
     const d = Math.hypot(dx, dy) || 1;
     let ux = dx / d;
     let uy = dy / d;
@@ -209,6 +223,10 @@ function updateEnemies(state, dt) {
     e.x += e.vx * dt;
     e.y += e.vy * dt;
     clampToArena(e, state.arena);
+
+    if (e.type === 'siphon') {
+      trySiphonCoil(state, e);
+    }
 
     if (dist(e, p) <= e.radius + p.radius - 2) {
       damagePlayer(state, e.damage);
@@ -315,6 +333,7 @@ export function spawnEnemyAt(state, type, x, y) {
     color: def.color,
     hitFlash: 0,
     isBoss: type === 'warden',
+    siphonCd: 0,
   };
   state.enemies.push(enemy);
   if (enemy.isBoss) state.bossSpawned = true;

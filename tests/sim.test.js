@@ -18,9 +18,13 @@ import {
   buildWavePlan,
   startWave,
   dist,
+  findNearestCoil,
+  trySiphonCoil,
   ARENA,
   PLAYER,
   WAVE,
+  ENEMY,
+  UPGRADE_POOL,
   resetIdCounter,
 } from '../src/game/index.js';
 
@@ -187,7 +191,8 @@ describe('COILBREAK simulation', () => {
       s.player.dashCooldown !== PLAYER.dashCooldown ||
       s.player.coilLifesteal > 0 ||
       s.player.boltCount > 1 ||
-      s.player.pickupRadius !== PLAYER.pickupRadius;
+      s.player.pickupRadius !== PLAYER.pickupRadius ||
+      s.player.coilArmor > 0;
     expect(changed).toBe(true);
   });
 
@@ -273,5 +278,95 @@ describe('COILBREAK simulation', () => {
     expect(s.wave).toBe(WAVE.count);
     expect(s.message).toMatch(/WARDEN/i);
     expect(s.spawnQueue.some((e) => e.type === 'warden')).toBe(true);
+  });
+
+  it('findNearestCoil returns closest node', () => {
+    const coils = [
+      { id: 'a', x: 100, y: 100, radius: 10, life: 10, pulse: 0 },
+      { id: 'b', x: 400, y: 300, radius: 10, life: 10, pulse: 0 },
+    ];
+    const near = findNearestCoil(coils, { x: 390, y: 310 });
+    expect(near?.id).toBe('b');
+    expect(findNearestCoil([], { x: 0, y: 0 })).toBeNull();
+  });
+
+  it('siphon enemy seeks coils and destroys them on contact (coil sabotage)', () => {
+    const s = createGameState({ seed: 61 });
+    startRun(s, { seed: 61 });
+    debugClearEnemies(s);
+    s.player.energy = 100;
+    s.coils = [
+      { id: 'c1', x: 300, y: 300, radius: 10, life: 12, pulse: 0, armor: 0 },
+    ];
+    const siphon = spawnEnemyAt(s, 'siphon', 300, 300);
+    expect(siphon.type).toBe('siphon');
+    expect(ENEMY.siphon.speed).toBeGreaterThan(ENEMY.grunt.speed);
+
+    // Contact at same point should destroy the coil immediately
+    const destroyed = trySiphonCoil(s, siphon);
+    expect(destroyed).toBe(true);
+    expect(s.coils.length).toBe(0);
+    expect(s.effects.some((fx) => fx.text === 'COIL LOST')).toBe(true);
+  });
+
+  it('siphon moves toward coil instead of player when network exists', () => {
+    const s = createGameState({ seed: 67 });
+    startRun(s, { seed: 67 });
+    debugClearEnemies(s);
+    // Player far top-left; coil far bottom-right; siphon center
+    s.player.x = 80;
+    s.player.y = 80;
+    s.coils = [{ id: 'far', x: 820, y: 520, radius: 10, life: 12, pulse: 0, armor: 0 }];
+    const siphon = spawnEnemyAt(s, 'siphon', 480, 320);
+    const x0 = siphon.x;
+    const y0 = siphon.y;
+    stepFor(s, 0.4);
+    const still = s.enemies.find((e) => e.id === siphon.id);
+    expect(still).toBeTruthy();
+    // Should have drifted toward the coil (down-right), not the player (up-left)
+    expect(still.x).toBeGreaterThan(x0);
+    expect(still.y).toBeGreaterThan(y0);
+  });
+
+  it('Hard Nodes coil armor absorbs one siphon hit before destroy', () => {
+    const s = createGameState({ seed: 71 });
+    startRun(s, { seed: 71 });
+    debugClearEnemies(s);
+    s.player.coilArmor = 1;
+    s.player.energy = 100;
+    s.player.coilPlaceTimer = 0;
+    setInput(s, { coil: true, aimX: 250, aimY: 250 });
+    const coil = placeCoil(s);
+    expect(coil).not.toBeNull();
+    expect(coil.armor).toBe(1);
+
+    const siphon = spawnEnemyAt(s, 'siphon', 250, 250);
+    expect(trySiphonCoil(s, siphon)).toBe(false);
+    expect(s.coils.length).toBe(1);
+    expect(s.coils[0].armor).toBe(0);
+
+    // Cooldown blocks immediate second hit
+    expect(trySiphonCoil(s, siphon)).toBe(false);
+    siphon.siphonCd = 0;
+    expect(trySiphonCoil(s, siphon)).toBe(true);
+    expect(s.coils.length).toBe(0);
+  });
+
+  it('wave 2+ schedules siphon saboteurs; boss wave includes them', () => {
+    const w1 = buildWavePlan(1);
+    const w2 = buildWavePlan(2);
+    const w5 = buildWavePlan(WAVE.count);
+    expect(w1.every((e) => e.type !== 'siphon')).toBe(true);
+    expect(w2.some((e) => e.type === 'siphon')).toBe(true);
+    expect(w5.filter((e) => e.type === 'siphon').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('hard_nodes upgrade is in the pool and sets coilArmor', () => {
+    const hard = UPGRADE_POOL.find((u) => u.id === 'hard_nodes');
+    expect(hard).toBeTruthy();
+    const s = createGameState({ seed: 73 });
+    startRun(s, { seed: 73 });
+    hard.apply(s);
+    expect(s.player.coilArmor).toBe(1);
   });
 });

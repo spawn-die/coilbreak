@@ -232,19 +232,28 @@ export class Renderer {
         ctx.setTransform(1, 0, 0, 1, e.x + (state.shake ? 0 : 0), e.y);
       }
       ctx.beginPath();
-      // angular body
       const r = e.radius;
-      ctx.moveTo(0, -r);
-      ctx.lineTo(r * 0.85, r * 0.7);
-      ctx.lineTo(0, r * 0.35);
-      ctx.lineTo(-r * 0.85, r * 0.7);
-      ctx.closePath();
+      if (e.type === 'siphon') {
+        // diamond silhouette — reads as a coil hunter
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r, 0);
+        ctx.lineTo(0, r);
+        ctx.lineTo(-r, 0);
+        ctx.closePath();
+      } else {
+        // angular body
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.85, r * 0.7);
+        ctx.lineTo(0, r * 0.35);
+        ctx.lineTo(-r * 0.85, r * 0.7);
+        ctx.closePath();
+      }
       ctx.fillStyle = flash ? '#ffffff' : e.color;
       ctx.shadowColor = e.color;
       ctx.shadowBlur = e.isBoss ? 24 : 12;
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.strokeStyle = e.type === 'siphon' ? COLORS.coilHot : 'rgba(0,0,0,0.35)';
       ctx.lineWidth = 2;
       ctx.stroke();
 

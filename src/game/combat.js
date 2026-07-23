@@ -96,10 +96,98 @@ export function placeCoil(state) {
     radius: p.coilRadius,
     life: 12,
     pulse: 0,
+    armor: Math.max(0, p.coilArmor | 0),
   };
   state.coils.push(coil);
   return coil;
 }
+
+/**
+ * Nearest coil to a point, or null if none.
+ * @param {import('./state.js').Coil[]} coils
+ * @param {{x:number,y:number}} pos
+ * @returns {import('./state.js').Coil | null}
+ */
+export function findNearestCoil(coils, pos) {
+  if (!coils.length) return null;
+  let best = coils[0];
+  let bestD = dist(pos, best);
+  for (let i = 1; i < coils.length; i++) {
+    const d = dist(pos, coils[i]);
+    if (d < bestD) {
+      bestD = d;
+      best = coils[i];
+    }
+  }
+  return best;
+}
+
+/** Seconds between siphon sabotage attempts while in contact. */
+export const SIPHON_SABOTAGE_COOLDOWN = 0.55;
+
+/**
+ * Siphon sabotage: destroy or chip armor on a coil the enemy is touching.
+ * Gated by `enemy.siphonCd` so Hard Nodes armor is meaningful under continuous contact.
+ * @param {any} state
+ * @param {import('./state.js').Enemy} enemy
+ * @returns {boolean} true if a coil was fully destroyed
+ */
+export function trySiphonCoil(state, enemy) {
+  if (enemy.type !== 'siphon') return false;
+  if ((enemy.siphonCd || 0) > 0) return false;
+
+  for (let i = 0; i < state.coils.length; i++) {
+    const c = state.coils[i];
+    if (dist(enemy, c) > enemy.radius + c.radius + 2) continue;
+
+    enemy.siphonCd = SIPHON_SABOTAGE_COOLDOWN;
+
+    const armor = c.armor | 0;
+    if (armor > 0) {
+      c.armor = armor - 1;
+      enemy.hitFlash = 0.12;
+      state.effects.push({
+        id: nextId('fx'),
+        kind: 'spark',
+        x: c.x,
+        y: c.y,
+        life: 0.25,
+        maxLife: 0.25,
+        color: COLORS_SPARK_ARMOR,
+        size: 5,
+      });
+      return false;
+    }
+
+    state.coils.splice(i, 1);
+    state.effects.push({
+      id: nextId('fx'),
+      kind: 'ring',
+      x: c.x,
+      y: c.y,
+      life: 0.4,
+      maxLife: 0.4,
+      color: '#5ce1ff',
+      size: 28,
+    });
+    state.effects.push({
+      id: nextId('fx'),
+      kind: 'text',
+      x: c.x,
+      y: c.y - 12,
+      life: 0.55,
+      maxLife: 0.55,
+      text: 'COIL LOST',
+      color: '#ff6ad5',
+      size: 12,
+    });
+    state.shake = Math.min(12, state.shake + 4);
+    return true;
+  }
+  return false;
+}
+
+const COLORS_SPARK_ARMOR = '#ffd166';
 
 /**
  * Attempt dash in movement direction (or aim if idle).

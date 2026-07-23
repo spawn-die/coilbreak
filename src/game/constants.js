@@ -34,6 +34,8 @@ export const ENEMY = Object.freeze({
   grunt: { radius: 12, hp: 28, speed: 95, damage: 10, score: 10, essence: 3, color: '#ff4d6d' },
   swift: { radius: 10, hp: 18, speed: 165, damage: 8, score: 15, essence: 4, color: '#ff9f1c' },
   brute: { radius: 20, hp: 90, speed: 55, damage: 18, score: 30, essence: 8, color: '#c77dff' },
+  /** Coil saboteur: hunts nearest coil and collapses it on contact. */
+  siphon: { radius: 11, hp: 32, speed: 130, damage: 9, score: 25, essence: 6, color: '#5ce1ff' },
   warden: { radius: 34, hp: 520, speed: 70, damage: 22, score: 500, essence: 50, color: '#00f5d4' },
 });
 
@@ -54,6 +56,7 @@ export const UPGRADE_POOL = Object.freeze([
   { id: 'vampiric', name: 'Leech Beam', desc: 'Coils heal you slightly', apply: (s) => { s.player.coilLifesteal = 0.08; } },
   { id: 'splitter', name: 'Splitter', desc: 'Bolts fork into 2', apply: (s) => { s.player.boltCount = Math.max(s.player.boltCount, 2); } },
   { id: 'magnet', name: 'Magnet Field', desc: 'Pull essence from farther', apply: (s) => { s.player.pickupRadius += 40; } },
+  { id: 'hard_nodes', name: 'Hard Nodes', desc: 'Coils resist one siphon hit', apply: (s) => { s.player.coilArmor = Math.max(s.player.coilArmor || 0, 1); } },
 ]);
 
 export const COLORS = Object.freeze({

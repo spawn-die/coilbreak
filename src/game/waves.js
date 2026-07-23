@@ -13,7 +13,9 @@ export function buildWavePlan(wave) {
       { type: 'grunt', delay: 0 },
       { type: 'grunt', delay: 0.3 },
       { type: 'swift', delay: 0.6 },
+      { type: 'siphon', delay: 0.8 },
       { type: 'brute', delay: 1.0 },
+      { type: 'siphon', delay: 1.4 },
       { type: 'warden', delay: 1.8 },
     ];
   }
@@ -23,6 +25,8 @@ export function buildWavePlan(wave) {
   const grunts = 3 + wave * 2;
   const swifts = Math.max(0, wave - 1);
   const brutes = wave >= 3 ? wave - 2 : 0;
+  // Coil saboteurs from wave 2 onward — force players to defend the network.
+  const siphons = wave >= 2 ? wave - 1 : 0;
 
   let t = 0;
   for (let i = 0; i < grunts; i++) {
@@ -36,6 +40,10 @@ export function buildWavePlan(wave) {
   for (let i = 0; i < brutes; i++) {
     plan.push({ type: 'brute', delay: t });
     t += 0.7;
+  }
+  for (let i = 0; i < siphons; i++) {
+    plan.push({ type: 'siphon', delay: t });
+    t += 0.55;
   }
   return plan;
 }
@@ -89,6 +97,7 @@ export function spawnEnemy(state, type) {
     color: def.color,
     hitFlash: 0,
     isBoss: type === 'warden',
+    siphonCd: 0,
   };
   state.enemies.push(enemy);
   if (enemy.isBoss) state.bossSpawned = true;

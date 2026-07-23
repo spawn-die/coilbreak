@@ -16,3 +16,7 @@ Arcade side dish. Real fun loop; **not** the studio wow flagship (that’s Night
 
 - `#file-warning[hidden]` needs `display:none !important` (ID CSS overrode `hidden`).  
 - Playwright bundled Chromium CDN 403 here — use `channel: 'chrome'`.
+
+## Expansions
+
+- **Siphon** enemies (wave 2+) hunt nearest coils and collapse them on contact; **Hard Nodes** upgrade gives coils 1 armor hit. Tests cover sabotage AI, armor, and wave plans.

@@ -94,6 +94,8 @@ export function createPlayer() {
     coilDamagePerSec: PLAYER.coilDamagePerSec,
     coilEnergyDrainPerSec: PLAYER.coilEnergyDrainPerSec,
     coilLifesteal: 0,
+    /** Hits a coil can absorb before being destroyed (Hard Nodes upgrade). */
+    coilArmor: 0,
     energyRegenPerSec: PLAYER.energyRegenPerSec,
     pickupRadius: PLAYER.pickupRadius,
     alive: true,
@@ -125,7 +127,7 @@ export function randRange(state, min, max) {
 /**
  * @typedef {Object} Enemy
  * @property {string} id
- * @property {'grunt'|'swift'|'brute'|'warden'} type
+ * @property {'grunt'|'swift'|'brute'|'siphon'|'warden'} type
  * @property {number} x
  * @property {number} y
  * @property {number} vx
@@ -140,6 +142,7 @@ export function randRange(state, min, max) {
  * @property {string} color
  * @property {number} hitFlash
  * @property {boolean} isBoss
+ * @property {number} [siphonCd] sabotage cooldown remaining (siphon only)
  */
 
 /**
@@ -163,6 +166,7 @@ export function randRange(state, min, max) {
  * @property {number} radius
  * @property {number} life
  * @property {number} pulse
+ * @property {number} [armor] remaining siphon hits absorbed (Hard Nodes)
  */
 
 /**
