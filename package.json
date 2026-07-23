@@ -4,7 +4,7 @@
   "description": "COILBREAK — weave lethal energy coils in a neon arena, evolve between waves, shatter the Core Warden.",
   "type": "module",
   "scripts": {
-    "start": "npx --yes serve -l 4173 .",
+    "start": "npx --yes serve -l 4783 .",
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:launch": "node scripts/verify-launch.mjs"

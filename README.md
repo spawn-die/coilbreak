@@ -13,7 +13,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:4173**
+Open **http://localhost:4783**
 
 > ES modules will not load from `file://`. Use `npm start` (or any static server from the repo root).
 
